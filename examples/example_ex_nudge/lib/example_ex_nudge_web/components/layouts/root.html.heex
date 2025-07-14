@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" class="[scrollbar-gutter:stable]">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <.live_title default="ExampleExNudge" suffix=" · Phoenix Framework">
+      {assigns[:page_title]}
+    </.live_title>
+    <link rel="manifest" href="/manifest.json" />
+    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
+    </script>
+     <%= Application.get_env(:live_debugger, :live_debugger_tags) %>
+  </head>
+  <body class="bg-white">
+    {@inner_content}
+  </body>
+</html>
