@@ -31,7 +31,8 @@ defmodule ExNudge do
   alias ExNudge.VAPID
   alias ExNudge.Telemetry
 
-  @type send_result :: {:ok, HTTPoison.Response.t()} | {:error, atom() | String.t() | known_error()}
+  @type send_result ::
+          {:ok, HTTPoison.Response.t()} | {:error, atom() | String.t() | known_error()}
   @type send_options :: [
           ttl: pos_integer(),
           concurrency: pos_integer(),

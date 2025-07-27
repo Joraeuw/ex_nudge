@@ -48,9 +48,6 @@ defmodule ExNudge.Encryption do
          salt: salt,
          as_public_key: as_public_key
        }}
-    else
-      {:error, reason} -> {:error, reason}
-      error -> {:error, {:encryption_failed, error}}
     end
   end
 
