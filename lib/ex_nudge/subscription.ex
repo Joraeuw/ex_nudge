@@ -43,7 +43,7 @@ defmodule ExNudge.Subscription do
       iex> ExNudge.Subscription.from_map(data, metadata)
       {:ok, %ExNudge.Subscription{...}}
   """
-  @spec from_map(map(), any()) :: {:ok, t()} | {:error, :invalid_subscription}
+  @spec from_map(map(), any()) :: {:ok, t()} | {:error, ExNudge.Error.t()}
   def from_map(
         subscription_map,
         metadata \\ nil
@@ -62,7 +62,7 @@ defmodule ExNudge.Subscription do
      }}
   end
 
-  def from_map(_, _), do: {:error, :invalid_subscription}
+  def from_map(_, _), do: {:error, ExNudge.Error.new(:invalid_subscription)}
 
   @doc """
   Validates that a subscription has all required fields and valid format.

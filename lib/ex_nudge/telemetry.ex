@@ -56,17 +56,11 @@ defmodule ExNudge.Telemetry do
 
   defp parse_result(result) do
     case result do
-      %HTTPoison.Response{status_code: status_code} when status_code in 200..299 ->
-        {:success, status_code, nil}
+      {:ok, %ExNudge.Response{status: status}} ->
+        {:success, status, nil}
 
-      %HTTPoison.Response{status_code: status_code, body: reason} ->
-        {:error, status_code, reason}
-
-      {:error, reason} when is_atom(reason) ->
-        {:error, nil, reason}
-
-      {:error, reason} ->
-        {:error, nil, inspect(reason)}
+      {:error, %ExNudge.Error{reason: reason, status: status}} ->
+        {:error, status, reason}
     end
   end
 

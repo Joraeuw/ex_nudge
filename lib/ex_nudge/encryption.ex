@@ -1,7 +1,6 @@
 defmodule ExNudge.Encryption do
-  @moduledoc """
-  Handles payload encryption according to RFC 8291 and RFC 8292.
-  """
+  @moduledoc false
+  # Handles payload encryption according to RFC 8291 and RFC 8292.
 
   alias ExNudge.Utils
 

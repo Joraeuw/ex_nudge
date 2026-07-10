@@ -20,8 +20,10 @@ defmodule ExNudge.SubscriptionTest do
     end
 
     test "returns error for invalid map" do
-      assert {:error, :invalid_subscription} = Subscription.from_map(%{})
-      assert {:error, :invalid_subscription} = Subscription.from_map(%{"endpoint" => "test"})
+      assert {:error, %ExNudge.Error{reason: :invalid_subscription}} = Subscription.from_map(%{})
+
+      assert {:error, %ExNudge.Error{reason: :invalid_subscription}} =
+               Subscription.from_map(%{"endpoint" => "test"})
     end
   end
 

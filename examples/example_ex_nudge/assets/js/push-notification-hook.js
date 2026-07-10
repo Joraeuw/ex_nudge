@@ -1,11 +1,47 @@
 import { PWAUtils } from "./pwa-utils";
 
+// Same database the service worker reads in its pushsubscriptionchange
+// handler (see priv/static/pwa-service-worker.js).
+const DB_NAME = 'ex-nudge-example';
+const STORE_NAME = 'push-tokens';
+const TOKEN_KEY = 'subscription-token';
+
+function openTokenDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function storeSubscriptionToken(token) {
+  const db = await openTokenDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(token, TOKEN_KEY);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export default {
   mounted() {
     console.log('Push notification hook mounted');
     this.vapidPublicKey = document.getElementById('vapid-public-key').value;
     this.swRegistration = null;
     this.subscribeBtn = document.getElementById('subscribe-btn');
+
+    // The server signs a token for the subscription endpoint; the service
+    // worker uses it to authenticate pushsubscriptionchange refreshes.
+    this.handleEvent('subscription_token', async ({ token }) => {
+      try {
+        await storeSubscriptionToken(token);
+      } catch (error) {
+        console.error('Failed to store subscription token:', error);
+      }
+    });
+
     this.init();
   },
 

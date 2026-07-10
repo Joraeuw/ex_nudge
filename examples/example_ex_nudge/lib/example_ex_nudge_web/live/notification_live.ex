@@ -113,7 +113,14 @@ defmodule ExampleExNudgeWeb.NotificationLive do
       {:ok, subscription} ->
         broadcast_device_added(subscription)
 
-        {:noreply, put_flash(socket, :info, "Device subscribed successfully!")}
+        # The hook stores this token in IndexedDB so the service worker can
+        # authenticate the pushsubscriptionchange refresh request.
+        token = ExampleExNudgeWeb.PushToken.sign(subscription.endpoint)
+
+        {:noreply,
+         socket
+         |> push_event("subscription_token", %{token: token})
+         |> put_flash(:info, "Device subscribed successfully!")}
 
       {:error, changeset} ->
         error_msg = format_changeset_errors(changeset)
@@ -122,7 +129,7 @@ defmodule ExampleExNudgeWeb.NotificationLive do
     end
   end
 
-  def handle_event("is-pwa", params, socket) do
+  def handle_event("is-pwa", _params, socket) do
     {:noreply, assign(socket, :is_pwa, true)}
   end
 
@@ -149,11 +156,11 @@ defmodule ExampleExNudgeWeb.NotificationLive do
         {:ok, _response} ->
           put_flash(socket, :info, "Test sent to #{subscription_id}!")
 
-        {:error, reason} ->
+        {:error, error} ->
           put_flash(
             socket,
             :info,
-            "Notification to #{subscription_id} failed with reason #{inspect(reason)}"
+            "Notification to #{subscription_id} failed: #{Exception.message(error)}"
           )
       end
 
@@ -165,10 +172,7 @@ defmodule ExampleExNudgeWeb.NotificationLive do
       PushService.broadcast(
         format_message("Broadcasted Test Message! 📩", "🚀🚀🚀 Broadcasted Test Message 🚀🚀🚀")
       )
-      |> Enum.count(fn
-        {:ok, _, _} -> true
-        {:error, _, _} -> false
-      end)
+      |> Enum.count(&match?({:ok, _}, &1))
 
     {:noreply,
      put_flash(socket, :info, "Test sent to #{successful_notification_count} subscriptions")}
@@ -237,7 +241,16 @@ defmodule ExampleExNudgeWeb.NotificationLive do
     Enum.map_join(changeset.errors, ", ", fn {field, {message, _}} -> "#{field}: #{message}" end)
   end
 
+  # ExNudge.Notification maps 1:1 to the browser's showNotification options,
+  # so the service worker can pass the payload straight through.
   defp format_message(title, body) do
-    Jason.encode!(%{title: title, body: body})
+    ExNudge.Notification.new(title,
+      body: body,
+      icon: "/images/logo.png",
+      badge: "/images/logo.png",
+      tag: "example",
+      data: %{url: "/"},
+      actions: [%{action: "open", title: "Open app"}]
+    )
   end
 end

@@ -1,7 +1,6 @@
 defmodule ExNudge.Utils do
-  @moduledoc """
-  Utility functions for the ExNudge library.
-  """
+  @moduledoc false
+  # Utility functions for the ExNudge library.
 
   @spec url_encode(binary()) :: String.t()
   def url_encode(data) when is_binary(data) do

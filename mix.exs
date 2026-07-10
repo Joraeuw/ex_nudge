@@ -1,7 +1,7 @@
 defmodule ExNudge.MixProject do
   use Mix.Project
 
-  @version "1.0.2"
+  @version "2.0.0"
   @source_url "https://github.com/joraeuw/ex_nudge"
 
   def project do
@@ -16,14 +16,14 @@ defmodule ExNudge.MixProject do
       package: package(),
       docs: docs(),
       source_url: @source_url,
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ],
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
+      dialyzer: [plt_add_apps: [:mix]]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
@@ -36,7 +36,7 @@ defmodule ExNudge.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: []
+      extra_applications: [:crypto, :inets, :public_key, :ssl]
     ]
   end
 
@@ -44,13 +44,11 @@ defmodule ExNudge.MixProject do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:httpoison, "~> 2.0"},
       {:jose, "~> 1.11"},
       {:jason, "~> 1.4"},
       {:telemetry, "~> 1.0"},
       {:dialyxir, "~> 1.3", only: [:dev, :test], runtime: false},
       {:bypass, "~> 2.1", only: :test},
-      {:mimic, "~> 1.12", only: :test},
       {:excoveralls, "~> 0.16", only: :test}
     ]
   end
@@ -82,10 +80,10 @@ defmodule ExNudge.MixProject do
       source_url: @source_url,
       extras: ["README.md", "CHANGELOG.md"],
       groups_for_modules: [
-        Core: [ExNudge, ExNudge.Subscription],
-        Encryption: [ExNudge.Encryption],
-        Authentication: [ExNudge.VAPID],
-        Utilities: [ExNudge.Utils]
+        Core: [ExNudge, ExNudge.Subscription, ExNudge.Notification],
+        HTTP: [ExNudge.HTTPClient, ExNudge.HTTPClient.Httpc, ExNudge.Response],
+        Errors: [ExNudge.Error],
+        Observability: [ExNudge.Telemetry]
       ]
     ]
   end

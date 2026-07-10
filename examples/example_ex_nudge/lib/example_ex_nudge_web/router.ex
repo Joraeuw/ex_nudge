@@ -21,10 +21,13 @@ defmodule ExampleExNudgeWeb.Router do
     live "/", NotificationLive, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", ExampleExNudgeWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ExampleExNudgeWeb do
+    pipe_through :api
+
+    # No CSRF here: the service worker authenticates with a signed
+    # Phoenix.Token instead (see ExampleExNudgeWeb.PushToken).
+    post "/push_subscriptions/refresh", PushSubscriptionController, :refresh
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:example_ex_nudge, :dev_routes) do

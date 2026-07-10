@@ -23,16 +23,15 @@ defmodule ExampleExNudge.PushService do
   def broadcast(payload) do
     PushSubscription
     |> Repo.all()
-    |> Enum.map(fn subscription ->
-      %ExNudge.Subscription{
-        endpoint: subscription.endpoint,
-        keys: %{
-          p256dh: subscription.p256dh_key,
-          auth: subscription.auth_key
-        }
-      }
+    |> Task.async_stream(
+      fn subscription -> send_push_notification(subscription, payload) end,
+      max_concurrency: 10,
+      on_timeout: :kill_task
+    )
+    |> Enum.map(fn
+      {:ok, result} -> result
+      {:exit, reason} -> {:error, reason}
     end)
-    |> ExNudge.send_notifications(payload)
   end
 
   def send_push_notification(subscription_id, payload) when is_bitstring(subscription_id) do
@@ -58,6 +57,24 @@ defmodule ExampleExNudge.PushService do
     |> Repo.delete()
   end
 
+  @doc """
+  Replaces the subscription stored under `old_endpoint` with the new
+  subscription data sent by the service worker on `pushsubscriptionchange`.
+  """
+  def refresh_subscription(old_endpoint, new_sub_data) do
+    attrs = parse_subscription_data(new_sub_data)
+
+    Repo.transaction(fn ->
+      old = Repo.one(from(s in PushSubscription, where: s.endpoint == ^old_endpoint))
+      if old, do: Repo.delete!(old)
+
+      case %PushSubscription{} |> PushSubscription.changeset(attrs) |> Repo.insert() do
+        {:ok, new_subscription} -> %{removed: old, added: new_subscription}
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
   defp parse_subscription_data(%{
          "endpoint" => endpoint,
          "keys" => %{"p256dh" => p256dh, "auth" => auth}
@@ -68,4 +85,6 @@ defmodule ExampleExNudge.PushService do
       auth_key: auth
     }
   end
+
+  defp parse_subscription_data(_), do: %{}
 end
